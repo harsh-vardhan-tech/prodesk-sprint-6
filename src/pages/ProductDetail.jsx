@@ -1,26 +1,33 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+
   const [product, setProduct] = useState(null);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [added, setAdded] = useState(false);
-  const { addToCart } = useCart();
+  const [isAdded, setIsAdded] = useState(false);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
+
     fetch(`https://dummyjson.com/products/${id}`)
       .then((res) => {
         if (!res.ok) {
-          throw new Error("Product not found");
+          throw new Error("Unable to retrieve product details");
         }
         return res.json();
       })
       .then((data) => {
         setProduct(data);
+        setSelectedImage(data.thumbnail || (data.images && data.images[0]) || "");
         setLoading(false);
       })
       .catch((err) => {
@@ -31,57 +38,136 @@ function ProductDetail() {
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product);
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
+      addToCart(product, quantity);
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 2000);
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading product details...</div>;
+    return (
+      <div className="status-container">
+        <div className="spinner"></div>
+        <p>Loading product #{id}...</p>
+      </div>
+    );
   }
 
   if (error || !product) {
     return (
-      <div className="error-message">
-        <p>{error || "Product not found"}</p>
-        <Link to="/shop" className="btn-secondary">
+      <div className="status-container error-box">
+        <h3>Product Not Found</h3>
+        <p>{error || "The requested item does not exist in inventory."}</p>
+        <button onClick={() => navigate("/shop")} className="btn-primary">
           Back to Shop
-        </Link>
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="detail-container">
-      <Link to="/shop" className="back-link">
-        &larr; Back to Shop
-      </Link>
-      <div className="detail-card">
-        <div className="detail-image-box">
-          <img
-            src={product.thumbnail || product.images?.[0]}
-            alt={product.title}
-            className="detail-image"
-          />
-        </div>
-        <div className="detail-info">
-          <span className="detail-category">{product.category}</span>
-          <h1 className="detail-title">{product.title}</h1>
-          <p className="detail-price">${product.price}</p>
-          <p className="detail-desc">{product.description}</p>
-          
-          <div className="detail-extra">
-            {product.brand && <p><strong>Brand:</strong> {product.brand}</p>}
-            {product.rating && <p><strong>Rating:</strong> {product.rating} / 5</p>}
+    <div className="product-detail-page">
+      <div className="breadcrumb">
+        <Link to="/">Home</Link> &gt; <Link to="/shop">Shop</Link> &gt;{" "}
+        <span>{product.title}</span>
+      </div>
+
+      <div className="detail-layout">
+        <div className="detail-media">
+          <div className="main-image-container">
+            <img
+              src={selectedImage}
+              alt={product.title}
+              className="detail-main-image"
+            />
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            className={added ? "btn-add added" : "btn-add"}
-          >
-            {added ? "Added to Cart!" : "Add to Cart"}
-          </button>
+          {product.images && product.images.length > 1 && (
+            <div className="thumbnail-strip">
+              {product.images.map((imgUrl, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedImage(imgUrl)}
+                  className={
+                    selectedImage === imgUrl
+                      ? "thumb-btn active"
+                      : "thumb-btn"
+                  }
+                >
+                  <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="detail-info">
+          <span className="detail-category-badge">{product.category}</span>
+          <h1 className="detail-title">{product.title}</h1>
+
+          <div className="detail-meta">
+            <span className="rating-pill">Rating: {product.rating || "4.5"} / 5</span>
+            {product.stock && (
+              <span className="stock-pill">
+                In Stock ({product.stock} available)
+              </span>
+            )}
+          </div>
+
+          <div className="detail-price-box">
+            <span className="detail-price">${product.price}</span>
+            {product.discountPercentage && (
+              <span className="discount-tag">
+                {product.discountPercentage}% OFF
+              </span>
+            )}
+          </div>
+
+          <div className="detail-description">
+            <h3>Description</h3>
+            <p>{product.description}</p>
+          </div>
+
+          <div className="purchase-controls">
+            <div className="quantity-selector">
+              <label>Quantity:</label>
+              <div className="qty-control-group">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="qty-btn"
+                >
+                  -
+                </button>
+                <span className="qty-display">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => q + 1)}
+                  className="qty-btn"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className={isAdded ? "btn-add-main added" : "btn-add-main"}
+            >
+              {isAdded ? "Added to Cart!" : "Add to Cart"}
+            </button>
+          </div>
+
+          <div className="detail-features">
+            <div className="feature-item">
+              <strong>Warranty:</strong> {product.warrantyInformation || "1 Year Official Warranty"}
+            </div>
+            <div className="feature-item">
+              <strong>Shipping:</strong> {product.shippingInformation || "Free standard shipping (3-5 business days)"}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -89,4 +175,3 @@ function ProductDetail() {
 }
 
 export default ProductDetail;
-

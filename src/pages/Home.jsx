@@ -1,33 +1,74 @@
 import { Link } from "react-router-dom";
 
 function Home() {
+  const featuredCategories = [
+    { name: "Beauty", path: "/shop" },
+    { name: "Fragrances", path: "/shop" },
+    { name: "Furniture", path: "/shop" },
+    { name: "Groceries", path: "/shop" },
+  ];
+
   return (
     <div className="home-container">
-      <div className="hero-banner">
-        <h1>Welcome to ShopZone</h1>
-        <p>Discover top trending electronics, fashion, and lifestyle products at best prices.</p>
-        <Link to="/shop" className="btn-primary">
-          Explore Products
-        </Link>
-      </div>
+      <section className="hero-banner">
+        <span className="hero-tag">Welcome to ShopZone 2026</span>
+        <h1>Curated Essentials, Right at Your Doorstep</h1>
+        <p>
+          Explore top quality goods across beauty, home essentials, groceries,
+          and lifestyle gear. Simple shopping with seamless navigation.
+        </p>
+        <div className="hero-actions">
+          <Link to="/shop" className="btn-hero-primary">
+            Explore All Products
+          </Link>
+          <Link to="/contact" className="btn-hero-secondary">
+            Get Support
+          </Link>
+        </div>
+      </section>
 
-      <div className="features-section">
-        <div className="feature-card">
-          <h3>Fast Delivery</h3>
-          <p>Get your orders delivered swiftly and reliably across the country.</p>
+      <section className="categories-preview">
+        <h2>Popular Collections</h2>
+        <div className="categories-grid">
+          {featuredCategories.map((cat, idx) => (
+            <Link to={cat.path} key={idx} className="category-card">
+              <h3>{cat.name}</h3>
+              <span>Browse items &rarr;</span>
+            </Link>
+          ))}
         </div>
-        <div className="feature-card">
-          <h3>Quality Assured</h3>
-          <p>Only authentic items directly sourced from top verified suppliers.</p>
+      </section>
+
+      <section className="features-grid">
+        <div className="feature-box">
+          <div className="feature-icon">⚡</div>
+          <h3>Instant Client-Side SPA</h3>
+          <p>
+            Experience lightning fast page-to-page navigation without full page
+            reloads.
+          </p>
         </div>
-        <div className="feature-card">
-          <h3>24/7 Support</h3>
-          <p>We are here around the clock to solve any queries you might have.</p>
+
+        <div className="feature-box">
+          <div className="feature-icon">🛡️</div>
+          <h3>Protected Checkout</h3>
+          <p>
+            Secure routing that guards your order process and remembers your
+            session.
+          </p>
         </div>
-      </div>
+
+        <div className="feature-box">
+          <div className="feature-icon">🔄</div>
+          <h3>Synchronized State</h3>
+          <p>
+            Context-driven cart synced to your browser storage across all tabs
+            and refreshes.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
 
 export default Home;
-
